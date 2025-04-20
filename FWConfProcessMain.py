@@ -11,15 +11,19 @@ import re
 import MySQLdb
 
 import logging
+
+# The below Python code sets up a logger named 'myapp' that writes log messages to a file named
+# "FWConfProcessMain.log" located at "/root/Firewalls/config_BU/". It configures the logger to include
+# the timestamp, log level, and message in the log entries. The logger is set to log messages with a
+# level of DEBUG or higher. Finally, it logs an informational message "Conf Files processing starts"
+# to indicate the start of configuration files processing.
 logger = logging.getLogger('myapp')
-#hdlr = logging.FileHandler('FWConfProcessMain.log')
 hdlr = logging.FileHandler("/root/Firewalls/config_BU/FWConfProcessMain.log")
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr) 
 logger.setLevel(logging.DEBUG)
 
-#logger.error('We have a problem')
 logger.info('Conf Files processing starts')
 
 a = 'a..!b...c???d;;'
@@ -27,16 +31,22 @@ chars = [',', '!', ';', '?']
 
 print re.sub('[%s]' % ''.join(chars), '', a)
 
-db = MySQLdb.connect(host="localhost", user="root", passwd="toor", db="FWConfig")
-#db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="fwconfig")
+# The below code is establishing a connection to a MySQL database using the MySQLdb library in Python.
+# It is connecting to a database named "FWConfig" on the localhost server
+
+db = MySQLdb.connect(host="localhost", user="#####", passwd="######", db="FWConfig")
 
 cur = db.cursor()
 
 charstobreplaced = [',', '!',  ';', '?' , '\'' , '"','\\']
 
-
 file_fws = open("/root/Firewalls/config_BU/files.txt")
 
+# The above code is a Python script that is executing a series of SQL DELETE statements on multiple
+# tables in a database. It is deleting all records from the tables `addressobjects`, `group_members`,
+# `groups`, `mip`, `policies`, `policies_details`, `scheduler`, and `services` in the `fwconfig`
+# schema. After executing the DELETE statements, the code closes the cursor and creates a new cursor
+# for further database operations.
 sql = "DELETE FROM fwconfig.addressobjects ; DELETE FROM fwconfig.group_members ; DELETE FROM fwconfig.groups ; DELETE FROM fwconfig.mip ; DELETE FROM fwconfig.policies ; DELETE FROM fwconfig.policies_details ; DELETE FROM fwconfig.scheduler ; DELETE FROM fwconfig.services ;"
 
 cur.execute(sql);
@@ -61,18 +71,20 @@ while 1:
     counter_grp_member_srv = 0
     
     tempstr = "/root/Firewalls/config_BU/" + line_fwfile.strip()
-    #tempstr = "D:\\python\\conf_files_1\\" + line_fwfile.strip()
-    
-    
     file_currentFW = open(tempstr)
-    print "file >>>>>>>>>" + tempstr
     logger.debug("Firewall conf file >>>>>>>>>   " + line_fwfile.strip())
+    
+    
+    # The above code snippet is a Python script that reads lines from a file (`file_currentFW`) and uses
+    # regular expressions to match and extract specific patterns from each line.
     while 1:
         line = file_currentFW.readline()
         if not line:
             break
         
-        #matchObj_address1 = re.match( r'set\saddress\s"([^"]*)"\s"([^"]*)"\s([^"]*)[\s]?(".*")?', line, re.M|re.I)
+        # The above code is using regular expressions in Python to match and extract specific patterns from
+        # input lines. Each `re.match` function call is attempting to match a specific pattern in the `line`
+        # variable using the provided regular expression pattern.
         matchObj_address1 = re.match( r'set\saddress\s"([^"]*)"\s"([^"]*)"\s([0-9]+(?:\.[0-9]+){3})\s([0-9]+(?:\.[0-9]+){3})(\s"[^"]*")?', line, re.M|re.I)
         matchObj_address2 = re.match( r'set\saddress\s"([^"]*)"\s"([^"]*)"\s([^\d][^"]*)(\s\s"([^"]*)")?\n', line, re.M|re.I)
         matchObj_mip = re.match(r'set\sinterface\s"([^"]*)"\smip\s([0-9]+(?:\.[0-9]+){3})\shost\s([0-9]+(?:\.[0-9]+){3})\snetmask\s([0-9]+(?:\.[0-9]+){3})\svr\s"([^"]*)"', line, re.M|re.I)
@@ -84,71 +96,47 @@ while 1:
         matchObj_Group_service_member = re.match(r'set\sgroup\sservice\s"([^"]*)"\sadd\s"([^"]*)"' , line , re.M|re.I )
         
         if matchObj_address1:
-            #print "\nmatchObj.group() : ", matchObj_address1.group()
-            #print "matchObj.group(1) : ", matchObj_address1.group(1)
-            #print "matchObj.group(2) : ", matchObj_address1.group(2)
-            #print "matchObj.group(3) : ", matchObj_address1.group(3)
-            #print "matchObj.group(4) : ", matchObj_address1.group(4)
-            #print "matchObj.group(5) : ", matchObj_address1.group(5)
             if (matchObj_address1.group(5)):
                 sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address1.group(1).strip() + "','" + matchObj_address1.group(2).strip() + "', '-' ,'" + matchObj_address1.group(3).strip()+ "','" + matchObj_address1.group(4).strip()+ "',0,'" + matchObj_address1.group(5).strip().translate(None, ''.join(charstobreplaced)) + "', '"+line_fwfile.strip()+"');"
             else :
-                sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address1.group(1).strip() + "','" + matchObj_address1.group(2).strip() + "', '-' ,'" + matchObj_address1.group(3).strip()+ "','" + matchObj_address1.group(4).strip()+ "',0,'', '"+line_fwfile.strip()+"');"   
-            #print sql
+                sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address1.group(1).strip() + "','" + matchObj_address1.group(2).strip() + "', '-' ,'" + matchObj_address1.group(3).strip()+ "','" + matchObj_address1.group(4).strip()+ "',0,'', '"+line_fwfile.strip()+"');"       
             cur.execute(sql)
             counter = counter + 1
+        
         elif matchObj_address2:
-            #print "\nmatchObj.group() : ", matchObj.group()
-            #print "matchObj.group(1) : ", matchObj.group(1)
-            #print "matchObj.group(2) : ", matchObj.group(2)
-            #print "matchObj.group(3) : ", matchObj.group(3)
-            #print "matchObj.group(4) : ", matchObj.group(4)
-            #sql = "INSERT INTO `fwconfig`.`AddressObjects` (`ObjectName`,`Zone`,`FullName`,`IP`,`type`,`comment`) VALUES('" +matchObj.group(2)+ "','" + matchObj.group(1)+ "', '"+matchObj.group(3).strip()+"' ,'-',1,'"+matchObj.group(4)+"');";
-            #sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`) VALUES ('" + matchObj.group(1).strip() + "','" + matchObj.group(2).strip() + "','" + matchObj.group(3).strip()+ "','-','-',1,'" + matchObj.group(4).strip().translate(None, ''.join(charstobreplaced))+ "');"
             if (matchObj_address2.group(4)):
                 sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address2.group(1).strip() + "','" + matchObj_address2.group(2).strip() + "','" + matchObj_address2.group(3).strip()+ "','-','-',1,'" + matchObj_address2.group(5).strip().translate(None, ''.join(charstobreplaced))+ "', '"+line_fwfile.strip()+"');"
             else :
-                sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address2.group(1).strip() + "','" + matchObj_address2.group(2).strip() + "','" + matchObj_address2.group(3).strip()+ "','-','-',1,'', '"+line_fwfile.strip()+"');"   
-            #print sql
+                sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('" + matchObj_address2.group(1).strip() + "','" + matchObj_address2.group(2).strip() + "','" + matchObj_address2.group(3).strip()+ "','-','-',1,'', '"+line_fwfile.strip()+"');"  
             counter = counter + 1
             cur.execute(sql)
+        
         elif matchObj_mip:
-            #print "\nmatchObj.group() : ", matchObj_mip.group()
-            #print "matchObj.group(1) : ", matchObj_mip.group(1)
-            #print "matchObj.group(2) : ", matchObj_mip.group(2)
-            #print "matchObj.group(3) : ", matchObj_mip.group(3)
-            #print "matchObj.group(4) : ", matchObj_mip.group(4)
-            #print "matchObj.group(5) : ", matchObj_mip.group(5)
             sql = "INSERT INTO fwconfig.mip (Interface, MappedIP, HostIP, NetMask, VR, Firewall, Revision) VALUES ('" + matchObj_mip.group(1) + "', '" + matchObj_mip.group(2) + "', '" + matchObj_mip.group(3) + "', '" + matchObj_mip.group(4) + "', '" + matchObj_mip.group(5) + "', '"+line_fwfile.strip()+"', '-');"
-            #print sql
             cur.execute(sql)
             sql = "INSERT INTO `fwconfig`.`AddressObjects` (`Zone`,`ObjectName`,`FullName`,`IP`,`SubnetMask`,`type`,`comment`, `Firewall`) VALUES ('Global','MIP(" +matchObj_mip.group(2).strip() + ")', '-' ,'"+matchObj_mip.group(2)+"','" +matchObj_mip.group(4).strip() + "',0,'HostIP(" +matchObj_mip.group(3).strip()+ ")' , '"+line_fwfile.strip()+"');"
-            #print sql
             cur.execute(sql)
             counter_mip = counter_mip + 1
         elif matchObj_service:
             counter_service = counter_service + 1
             sql = "INSERT INTO fwconfig.services (Service, protocol, `src-port`, `dst-port`, Firewall)VALUES ('"+ matchObj_service.group(1).strip() +"', '"+ matchObj_service.group(2).strip() +"', '"+ matchObj_service.group(3).strip() +"', '"+ matchObj_service.group(4).strip() +"', '"+line_fwfile.strip()+"');"
-            #print sql
             cur.execute(sql)
+            
         elif matchObj_Scheduler:
             counter_schedular = counter_schedular + 1
             if (matchObj_Scheduler.group(5)):
                 sql = "INSERT INTO `fwconfig`.`scheduler` (`Scheduler`,`SchedulerType`,`Start`,`End`,`comment`,`config`, `Firewall`) VALUES ( '"+ matchObj_Scheduler.group(1).strip() +"','"+ matchObj_Scheduler.group(2).strip() +"',STR_TO_DATE('"+ matchObj_Scheduler.group(3).strip() +"','%m/%d/%Y %H:%i'),STR_TO_DATE('"+ matchObj_Scheduler.group(4).strip() +"','%m/%d/%Y %H:%i'),'"+ matchObj_Scheduler.group(6).strip() +"','-', '"+line_fwfile.strip()+"');"
             else :
                 sql = "INSERT INTO `fwconfig`.`scheduler` (`Scheduler`,`SchedulerType`,`Start`,`End`,`comment`,`config`, `Firewall`) VALUES ( '"+ matchObj_Scheduler.group(1).strip() +"','"+ matchObj_Scheduler.group(2).strip() +"',STR_TO_DATE('"+ matchObj_Scheduler.group(3).strip() +"','%m/%d/%Y %H:%i'),STR_TO_DATE('"+ matchObj_Scheduler.group(4).strip() +"','%m/%d/%Y %H:%i'),'-','-', '"+line_fwfile.strip()+"');"
-            #print sql
             cur.execute(sql)
         elif matchObj_Group:
             if (matchObj_Group.group(3)):
                 sql = "INSERT INTO `fwconfig`.`groups` (`Zone`, `GroupName`,  `Comment`, `Firewall` , `type`) VALUES ('" + matchObj_Group.group(1).translate(None, ''.join(charstobreplaced))+ "', '"+matchObj_Group.group(2).translate(None, ''.join(charstobreplaced)) + "', '"+ matchObj_Group.group(4).translate(None, ''.join(charstobreplaced))+"', '" + line_fwfile.strip() + "' , 'address');"
             else :
-                sql = "INSERT INTO `fwconfig`.`groups` (`Zone`, `GroupName`,  `Comment`, `Firewall` , `type`) VALUES ('" + matchObj_Group.group(1).translate(None, ''.join(charstobreplaced))+ "', '"+matchObj_Group.group(2).translate(None, ''.join(charstobreplaced)) + "', '-', '" +line_fwfile.strip()+ "', 'address');"
-            #print sql
+                sql = "INSERT INTO `fwconfig`.`groups` (`Zone`, `GroupName`,  `Comment`, `Firewall` , `type`) VALUES ('" + matchObj_Group.group(1).translate(None, ''.join(charstobreplaced))+ "', '"+matchObj_Group.group(2).translate(None, ''.join(charstobreplaced)) + "', '-', '" +line_fwfile.strip()+ "', 'address');"   
             cur.execute(sql)
             counter_Group = counter_Group + 1
             
-
         elif matchObj_Group_member:
             sql = "INSERT INTO `fwconfig`.`group_members` (`GroupName`, `AddressMember`, `Zone`, `Firewall` , `type`) VALUES ('"+matchObj_Group_member.group(2).translate(None, ''.join(charstobreplaced))+"', '"+matchObj_Group_member.group(3).translate(None, ''.join(charstobreplaced))+"', '"+matchObj_Group_member.group(1)+"', '" +line_fwfile.strip()+ "', 'address');"
             cur.execute(sql)
@@ -159,19 +147,14 @@ while 1:
                 sql = "INSERT INTO `fwconfig`.`groups` (`Zone`, `GroupName`,  `Comment`, `Firewall` , `type`) VALUES ('-', '"+matchObj_Group_service.group(1).translate(None, ''.join(charstobreplaced)) + "', '"+ matchObj_Group_service.group(4).translate(None, ''.join(charstobreplaced))+"', '" + line_fwfile.strip() + "' , 'service');"
             else :
                 sql = "INSERT INTO `fwconfig`.`groups` (`Zone`, `GroupName`,  `Comment`, `Firewall` , `type`) VALUES ('-', '"+matchObj_Group_service.group(1).translate(None, ''.join(charstobreplaced)) + "', '-', '" +line_fwfile.strip()+ "', 'service');"
-            #print sql
             cur.execute(sql)
             counter_Group_srv = counter_Group_srv + 1
             
-
         elif matchObj_Group_service_member:
             sql = "INSERT INTO `fwconfig`.`group_members` (`GroupName`, `AddressMember`, `Zone`, `Firewall` , `type`) VALUES ('"+matchObj_Group_service_member.group(1).translate(None, ''.join(charstobreplaced))+"', '"+matchObj_Group_service_member.group(2).translate(None, ''.join(charstobreplaced))+"', '-', '" +line_fwfile.strip()+ "', 'service');"
             cur.execute(sql)
             counter_grp_member_srv = counter_grp_member_srv + 1
             
-            
-        #else :
-            #print line
     pass # First inner loop
     print "\nCounter >>>> " , counter
     print "Counter_mip >>>> " , counter_mip
@@ -182,6 +165,13 @@ while 1:
     print "Counter_Group_Service >>>> " ,counter_Group_srv
     print "Counter_Group_Service_Memeber >>>> " ,counter_grp_member_srv
     
+    # The below code is using the Python logging module to output debug messages. It is logging the number
+    # of matches for different types of objects (Address Objects, Service Objects, MIPs, Scheduler
+    # Objects, Address Groups, Address Group Members, Service Groups, and Service Group Members) in a
+    # firewall configuration file. The `line_fwfile.strip()` is used to remove any leading or trailing
+    # whitespaces from the `line_fwfile` variable before concatenating it with the log message. The
+    # `str(counter)` and `str(counter_service)` are used to convert the counter variables to strings
+    # before concatenating them with
     logger.debug("Address Objects match in firewall  " + line_fwfile.strip() + " = " + str(counter))
     logger.debug("Services Objects match in firewall  " + line_fwfile.strip() + " = " + str(counter_service))
     logger.debug("MIPs match in firewall  " + line_fwfile.strip() + " = " + str(counter_mip))
@@ -196,9 +186,11 @@ while 1:
     file_fw_policies = open(tempstr)
     policy_id = '' 
     policy_found = False
+    
+    # This Python code snippet is reading lines from a file containing firewall policies and extracting
+    # information from each line using regular expressions. Here is a breakdown of what the code is doing:
     while 1:
         line_policies = file_fw_policies.readline()
-    
         matchObj_policy = re.match(r'set\spolicy\sid\s(\w*)(\sname\s"([^"]*)")?\sfrom\s"([^"]*)"\sto\s"([^"]*)"\s*"([^"]*)"\s"([^"]*)"\s"([^"]*)"\s((?:nat\ssrc\s)?(?:dip-id\s\d+\s)?)permit(\sschedule\s"([^"]*)")?', line_policies , re.M|re.I)
         matchObj_policy_src = re.match(r'set\ssrc-address\s"([^"]*)"',  line_policies , re.M|re.I )
         matchObj_policy_dst = re.match(r'set\sdst-address\s"([^"]*)"',  line_policies , re.M|re.I )
@@ -232,7 +224,7 @@ while 1:
                     sql = "INSERT INTO `fwconfig`.`policies` (`PolicyID`,`PolicyName`,`src_zone`,`dst_zone`,`schedule`, `Firewall` , `NAT`) VALUES (CONVERT('"+ matchObj_policy.group(1).strip() +"', UNSIGNED INTEGER),'"+ matchObj_policy.group(3).strip().translate(None, ''.join(charstobreplaced)) +"','"+ matchObj_policy.group(4).strip() +"','"+ matchObj_policy.group(5).strip() +"','-', '"+line_fwfile.strip()+"', ' " +matchObj_policy.group(9).strip() +"');"
                 else :
                     sql = "INSERT INTO `fwconfig`.`policies` (`PolicyID`,`PolicyName`,`src_zone`,`dst_zone`,`schedule`, `Firewall` , `NAT`) VALUES (CONVERT('"+ matchObj_policy.group(1).strip() +"', UNSIGNED INTEGER),'-','"+ matchObj_policy.group(4).strip() +"','"+ matchObj_policy.group(5).strip() +"','-', '"+line_fwfile.strip()+"' , ' " +matchObj_policy.group(9).strip() +"');"
-            #print sql
+           
             cur.execute(sql)
             sql = "INSERT INTO fwconfig.policies_details (policy_id, Pol_detail_type, Object, Firewall)VALUES (CONVERT('"+ policy_id +"', UNSIGNED INTEGER), 'source', '"+ matchObj_policy.group(6).strip().translate(None, ''.join(charstobreplaced)) +"', '"+line_fwfile.strip()+"');"
             cur.execute(sql)
@@ -243,21 +235,16 @@ while 1:
         elif (matchObj_policy_src and  policy_found):
             sql = "INSERT INTO fwconfig.policies_details (policy_id, Pol_detail_type, Object, Firewall)VALUES (CONVERT('"+ policy_id +"', UNSIGNED INTEGER), 'source', '"+matchObj_policy_src.group(1).strip().translate(None, ''.join(charstobreplaced))+"', '"+line_fwfile.strip()+"');"
             cur.execute(sql)
-            #print policy_id
         elif (matchObj_policy_dst and  policy_found):
             sql = "INSERT INTO fwconfig.policies_details (policy_id, Pol_detail_type, Object, Firewall)VALUES (CONVERT('"+ policy_id +"', UNSIGNED INTEGER), 'dest', '"+matchObj_policy_dst.group(1).strip().translate(None, ''.join(charstobreplaced))+"', '"+line_fwfile.strip()+"');"
             cur.execute(sql)
-            #print policy_id
         elif (matchObj_policy_service and  policy_found): 
             sql = "INSERT INTO fwconfig.policies_details (policy_id, Pol_detail_type, Object, Firewall)VALUES (CONVERT('"+ policy_id +"', UNSIGNED INTEGER), 'service', '"+matchObj_policy_service.group(1).strip().translate(None, ''.join(charstobreplaced)) +"', '"+line_fwfile.strip()+"');"
             cur.execute(sql)
-            #print policy_id
         elif (matchObj_disable and  policy_found):
             counter_disable = counter_disable + 1  
             sql = "INSERT INTO fwconfig.policies_details (policy_id, Pol_detail_type, Object, Firewall)VALUES (CONVERT('"+ policy_id +"', UNSIGNED INTEGER), 'disabled', '-', '"+line_fwfile.strip()+"');"
-            #print sql
             cur.execute(sql) 
-            #print policy_id 
         elif  (line_policies.strip() == 'exit' and  policy_found): 
             counter_exit = counter_exit + 1  
             policy_found = False
@@ -265,14 +252,12 @@ while 1:
             break
     pass # second inner loop
     
-    
     print "counter_policy >>>> " ,counter_policy
     print "counter_disable >>>> " ,counter_disable
     print "counter_exit >>>> " ,counter_exit
     
     logger.debug("Policies match in firewall  " + line_fwfile.strip() + " = " + str(counter_policy))
     logger.debug("Policies disabled in firewall  " + line_fwfile.strip() + " = " + str(counter_disable))
-    
     
 pass # big looooooooop
 logger.debug('Conf Files processing starts ends')
